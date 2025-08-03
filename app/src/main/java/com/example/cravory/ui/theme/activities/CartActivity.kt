@@ -214,8 +214,7 @@ fun CartScreen() {
                                     grandTotal = 0.0
                                 }
 
-//                                snackbarHostState.showSnackbar(message)
-                                Log.e("makepayment API",message)
+                                Log.e("Payment API",message)
                                 snackbarHostState.showSnackbar("Having Some Problem While Placing The Order")
                             } else {
                                 snackbarHostState.showSnackbar("Cart is empty")
