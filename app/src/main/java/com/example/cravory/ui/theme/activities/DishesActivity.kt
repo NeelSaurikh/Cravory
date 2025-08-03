@@ -2,6 +2,7 @@ package com.example.cravory.ui.theme.activities
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
@@ -30,8 +31,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cravory.Cart
 import com.example.cravory.R
@@ -69,6 +73,9 @@ fun DishesScreen(
     val context = LocalContext.current
     var fabExpanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val customFontBar = FontFamily(
+        Font(R.font.greatvibes_regular)
+    )
 
     LaunchedEffect(cuisineId, sortBy) {
         Log.d("DishesScreen", "Fetching dishes for cuisineId: $cuisineId, sortBy: $sortBy")
@@ -86,13 +93,14 @@ fun DishesScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Craving For $cuisineName",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color.White
-                        )
-                    )
-                },
+                        Text(
+                            text = "Craving For $cuisineName",
+                            fontFamily = customFontBar,
+                            fontSize = 24.sp,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = Color.White
+                            )
+                        ) },
                 navigationIcon = {
                     val activity = LocalContext.current as? Activity
                     IconButton(onClick = { activity?.finish() }) {
@@ -109,6 +117,26 @@ fun DishesScreen(
                     navigationIconContentColor = Color.White,
                     titleContentColor = Color.White
                 )
+            )
+        },
+
+        // ✅ ADD THIS
+        bottomBar = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    val intent = Intent(context, CartActivity::class.java)
+                    context.startActivity(intent)
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.shopping_cart_24),
+                        contentDescription = "Cart"
+                    )
+                },
+                text = { Text("Go to Cart") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
         },
         floatingActionButton = {
@@ -149,8 +177,9 @@ fun DishesScreen(
                     onClick = { fabExpanded = !fabExpanded }
                 ) {
                     Icon(
-                        imageVector = if (fabExpanded) Icons.Default.Close else Icons.Default.Search,
-                        contentDescription = "Toggle Sort Options"
+                        painter = painterResource(id = R.drawable.sort_24),
+                        contentDescription = "Decrease",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -228,22 +257,24 @@ fun DishCard(
         bitmap = ApiClient.loadImage(dish.image_url)
     }
 
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(6.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(8.dp),
+        shape = RoundedCornerShape(16.dp),
+        tonalElevation = 4.dp,
+        shadowElevation = 4.dp
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             // Dish Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16 / 9f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 bitmap?.let {
                     Image(
@@ -260,88 +291,91 @@ fun DishCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Dish Name
             Text(
                 text = dish.name,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            // Rating + Price Row
+            // Rating + Price
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "₹${dish.price}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = "⭐ ${dish.rating}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
 
-            // Quantity Selector and Add to Cart
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Quantity Selector
             Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer,
+                        RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                IconButton(
+                    onClick = { if (quantity > 0) quantity-- },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_minus),
+                        contentDescription = "Decrease",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                Text(
+                    text = quantity.toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(horizontal = 6.dp)
+                )
+
+                IconButton(
+                    onClick = { quantity++ },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_plus),
+                        contentDescription = "Increase",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Add to Cart Button - in Column
+            Button(
+                onClick = {
+                    if (quantity > 0) {
+                        val updatedDish = dish.copy(cuisineId = cuisineId)
+                        onAddToCart(updatedDish, quantity)
+                        quantity = 0
+                    }
+                },
+                enabled = quantity > 0,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    IconButton(
-                        onClick = { if (quantity > 0) quantity-- },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_minus),
-                            contentDescription = "Decrease",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    Text(
-                        text = quantity.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 6.dp)
-                    )
-
-                    IconButton(
-                        onClick = { quantity++ },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_plus),
-                            contentDescription = "Increase",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                Button(
-                    onClick = {
-                        if (quantity > 0) {
-                            val updatedDish = dish.copy(cuisineId = cuisineId)
-                            onAddToCart(updatedDish, quantity)
-                            quantity = 0 // Reset quantity after adding
-                        }
-                    },
-                    enabled = quantity > 0,
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text("Add to Cart")
-                }
+                Text("Add to Cart")
             }
         }
     }

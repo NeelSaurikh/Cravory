@@ -106,6 +106,10 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
     var isFabExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    val customFont = FontFamily(
+        Font(R.font.greatvibes_regular) // Your font name
+    )
+
     if (cuisines.isNotEmpty() && selectedCuisine == null) {
         selectedCuisine = cuisines[0]
     }
@@ -143,6 +147,8 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
                 title = {
                     Text(
                         text = "Cravory",
+                        fontFamily = customFont,
+                        fontSize = 28.sp,
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = Color.White
                         )
@@ -241,10 +247,15 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
                         selectedCuisine?.let { cuisine ->
                             Text(
                                 text = "Top Dishes in ${cuisine.cuisineName}",
-                                style = MaterialTheme.typography.titleLarge,
+                                fontFamily = customFont,
+                                style = MaterialTheme.typography.headlineLarge,
                                 modifier = Modifier.padding(start = 16.dp, top = 12.dp)
                             )
-                            DishGridView(dishes = cuisine.items.take(3))
+                            DishGridView(
+                                dishes = cuisine.items
+                                    .sortedByDescending { it.rating } // Sort by rating descending
+                                    .take(4) // Then take top 4
+                            )
 
                         }
                     }
@@ -254,9 +265,6 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
             // Cart Button - Bottom Start
             ExtendedFloatingActionButton(
                 onClick = {
-//                    val intent = Intent(context, CartActivity::class.java)
-//                    context.startActivity(intent)
-
                     val intent = Intent(context, CartActivity::class.java)
                     context.startActivity(intent)
                 },
@@ -311,6 +319,9 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
 fun CuisineCardView(cuisine: Cuisine, onClick: (Cuisine) -> Unit) {
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val customFont = FontFamily(
+        Font(R.font.greatvibes_regular) // Your font name
+    )
 
     LaunchedEffect(cuisine.cuisineImageUrl) {
         coroutineScope.launch {
@@ -358,7 +369,8 @@ fun CuisineCardView(cuisine: Cuisine, onClick: (Cuisine) -> Unit) {
             ) {
                 Text(
                     text = cuisine.cuisineName,
-                    style = MaterialTheme.typography.titleMedium,
+                    fontFamily = customFont,
+                    style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.align(Alignment.Center)
@@ -445,30 +457,5 @@ fun DishTileCard(dish: Dish) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
-    }
-}
-
-@Composable
-fun FontExampleMain() {
-    val customFont = FontFamily(
-        Font(R.font.greatvibes_regular) // Your font name
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Cravory in Custom Font",
-            fontFamily = customFont,
-            fontSize = 24.sp
-        )
-
-        Text(
-            text = "Default system font below",
-            fontSize = 20.sp,
-            modifier = Modifier.padding(top = 16.dp)
-        )
     }
 }

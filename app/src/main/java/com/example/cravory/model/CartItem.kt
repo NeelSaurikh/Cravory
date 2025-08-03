@@ -9,5 +9,9 @@ data class CartItem(
     val cuisineId: String,
     val itemId: String,
     val itemPrice: Double,
+    // API Int Response
+//    val cuisineId: Int,
+//    val itemId: Int,
+//    val itemPrice: Int,
     val itemQuantity: Int
 )

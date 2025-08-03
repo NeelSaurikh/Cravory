@@ -1,7 +1,10 @@
 package com.example.cravory.ui.theme.activities
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
+import com.example.cravory.R
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -14,9 +17,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.cravory.CravoryApp
 import com.example.cravory.database.AppDatabase
 import com.example.cravory.model.CartItem
@@ -25,11 +35,6 @@ import com.example.cravory.ui.theme.CravoryTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 
 class CartActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +51,7 @@ class CartActivity : ComponentActivity() {
         }
     }
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen() {
     val coroutineScope = rememberCoroutineScope()
@@ -55,6 +61,13 @@ fun CartScreen() {
     var taxes by remember { mutableStateOf(0.0) }
     var grandTotal by remember { mutableStateOf(0.0) }
     var showDialog by remember { mutableStateOf(false) }
+
+    val customFontBar = FontFamily(
+        Font(R.font.greatvibes_regular)
+    )
+    val customFont = FontFamily(
+        Font(R.font.sekaiwo_regular)
+    )
 
     // Fetch cart items when screen loads
     LaunchedEffect(Unit) {
@@ -71,6 +84,38 @@ fun CartScreen() {
     }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Your Cart",
+                        fontFamily = customFontBar,
+                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color.White
+                        )
+                    )
+                },
+                navigationIcon = {
+                    val activity = LocalContext.current as? Activity
+                    IconButton(onClick = { activity?.finish() }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.go_back_24),
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF333333),  // Dark background
+                    navigationIconContentColor = Color.White,
+                    titleContentColor = Color.White
+                )
+            )
+
+
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
@@ -80,11 +125,19 @@ fun CartScreen() {
                 .padding(16.dp)
         ) {
             if (cartItems.isEmpty()) {
-                Text(
-                    text = "Your cart is empty",
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Add Items In Your Cart To Satisfy Your Cravings",
+                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center
+
+                    )
+                }
             } else {
                 // Cart Items List
                 LazyColumn(
@@ -153,21 +206,23 @@ fun CartScreen() {
                         coroutineScope.launch {
                             if (cartItems.isNotEmpty()) {
                                 val (success, message) = ApiClient.makePayment(cartItems)
-                                coroutineScope.launch {
-                                    if (success) {
-                                        CravoryApp.database.cartDao().clearCart()
-                                        cartItems = emptyList()
-                                        netTotal = 0.0
-                                        taxes = 0.0
-                                        grandTotal = 0.0
-                                    }
-                                    snackbarHostState.showSnackbar(message)
+                                if (success) {
+                                    CravoryApp.database.cartDao().clearCart()
+                                    cartItems = emptyList()
+                                    netTotal = 0.0
+                                    taxes = 0.0
+                                    grandTotal = 0.0
                                 }
+
+//                                snackbarHostState.showSnackbar(message)
+                                Log.e("makepayment API",message)
+                                snackbarHostState.showSnackbar("Having Some Problem While Placing The Order")
                             } else {
                                 snackbarHostState.showSnackbar("Cart is empty")
                             }
                             showDialog = false
                         }
+
                     }) { Text("Place Order") }
                 },
                 dismissButton = {

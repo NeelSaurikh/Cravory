@@ -18,7 +18,7 @@
         <activity
             android:name=".ui.theme.activities.SplashActivity"
             android:exported="true"
-            android:label="@string/title_activity_splash"
+            android:label="@string/app_name"
             android:theme="@style/Theme.Cravory"
             android:screenOrientation="portrait">
             <intent-filter>
