@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Cravory</string>
+    <string name="cart">Cart</string>
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="language_toggle">Switch to %s</string>
+    <string name="title_activity_dishes">DishesActivity</string>
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="title_activity_splash">SplashActivity</string>
+</resources>
