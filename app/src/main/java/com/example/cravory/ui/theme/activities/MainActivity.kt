@@ -67,7 +67,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.room.Room
 import com.example.cravory.R
+import com.example.cravory.database.AppDatabase
 import com.example.cravory.model.Cuisine
 import com.example.cravory.model.Dish
 import com.example.cravory.network.ApiClient
@@ -77,10 +79,10 @@ import com.example.cravory.viewmodel.CuisineViewModel
 import com.example.cravory.viewmodel.CuisineViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -88,7 +90,6 @@ class MainActivity : ComponentActivity() {
                 CuisineScreen(
                     viewModel = viewModel(factory = CuisineViewModelFactory(FoodRepository()))
                 )
-                
             }
         }
     }
@@ -103,13 +104,15 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
     val listState = rememberLazyListState()
     var selectedCuisine by remember { mutableStateOf<Cuisine?>(null) }
     var isFabExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
+    if (cuisines.isNotEmpty() && selectedCuisine == null) {
+        selectedCuisine = cuisines[0]
+    }
     // Initialize selectedCuisine when cuisines list is first loaded
     LaunchedEffect(cuisines) {
         if (cuisines.isNotEmpty() && selectedCuisine == null) {
             selectedCuisine = cuisines[0]
-            // Scroll to the first item programmatically (optional)
-            listState.scrollToItem(0)
         }
     }
 
@@ -250,7 +253,13 @@ fun CuisineScreen(viewModel: CuisineViewModel = viewModel(factory = CuisineViewM
 
             // Cart Button - Bottom Start
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: Navigate to Cart Screen */ },
+                onClick = {
+//                    val intent = Intent(context, CartActivity::class.java)
+//                    context.startActivity(intent)
+
+                    val intent = Intent(context, CartActivity::class.java)
+                    context.startActivity(intent)
+                },
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.shopping_cart_24),

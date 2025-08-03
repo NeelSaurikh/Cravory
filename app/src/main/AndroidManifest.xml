@@ -5,6 +5,7 @@
 
     <application
         android:allowBackup="true"
+        android:name=".CravoryApp"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -29,6 +30,12 @@
         <!-- Other activities -->
         <activity
             android:name=".ui.theme.activities.DishesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_dishes"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Cravory" />
+        <activity
+            android:name=".ui.theme.activities.CartActivity"
             android:exported="false"
             android:label="@string/title_activity_dishes"
             android:screenOrientation="portrait"

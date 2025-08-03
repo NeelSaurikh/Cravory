@@ -1,47 +1,46 @@
 package com.example.cravory.ui.theme.activities
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.example.cravory.R
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cravory.Cart
+import com.example.cravory.R
 import com.example.cravory.model.Dish
 import com.example.cravory.network.ApiClient
 import com.example.cravory.ui.theme.CravoryTheme
 import com.example.cravory.viewmodel.DishesUiState
 import com.example.cravory.viewmodel.DishesViewModel
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import com.example.cravory.Cart
+import kotlinx.coroutines.launch
 
 class DishesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +57,7 @@ class DishesActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DishesScreen(
@@ -68,6 +68,7 @@ fun DishesScreen(
     var sortBy by remember { mutableStateOf("rating") }
     val context = LocalContext.current
     var fabExpanded by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(cuisineId, sortBy) {
         Log.d("DishesScreen", "Fetching dishes for cuisineId: $cuisineId, sortBy: $sortBy")
@@ -109,10 +110,8 @@ fun DishesScreen(
                     titleContentColor = Color.White
                 )
             )
-
         },
         floatingActionButton = {
-            // Removed Box with fillMaxSize to prevent overlap
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -174,7 +173,15 @@ fun DishesScreen(
                     )
                 }
                 is DishesUiState.Success -> {
-                    DishGridViewDistinct(dishes = uiState.dishes)
+                    DishGridViewDistinct(
+                        dishes = uiState.dishes,
+                        cuisineId = cuisineId,
+                        onAddToCart = { dish, quantity ->
+                            coroutineScope.launch {
+                                Cart.addItem(dish, quantity)
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -182,11 +189,15 @@ fun DishesScreen(
 }
 
 @Composable
-fun DishGridViewDistinct(dishes: List<Dish>) {
+fun DishGridViewDistinct(
+    dishes: List<Dish>,
+    cuisineId: String,
+    onAddToCart: (Dish, Int) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
-            .fillMaxSize() // Ensure grid takes full available space
+            .fillMaxSize()
             .padding(8.dp),
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -195,9 +206,8 @@ fun DishGridViewDistinct(dishes: List<Dish>) {
         items(dishes) { dish ->
             DishCard(
                 dish = dish,
-                onAddToCart = { selectedDish, quantity ->
-                    Cart.addItem(selectedDish, quantity)
-                },
+                cuisineId = cuisineId,
+                onAddToCart = onAddToCart,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -207,6 +217,7 @@ fun DishGridViewDistinct(dishes: List<Dish>) {
 @Composable
 fun DishCard(
     dish: Dish,
+    cuisineId: String,
     onAddToCart: (Dish, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -274,7 +285,8 @@ fun DishCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            // Quantity Selector
+
+            // Quantity Selector and Add to Cart
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -295,7 +307,8 @@ fun DishCard(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_minus),
                             contentDescription = "Decrease",
-                            modifier = Modifier.size(16.dp)                        )
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
 
                     Text(
@@ -308,7 +321,6 @@ fun DishCard(
                         onClick = { quantity++ },
                         modifier = Modifier.size(24.dp)
                     ) {
-
                         Icon(
                             painter = painterResource(id = R.drawable.ic_plus),
                             contentDescription = "Increase",
@@ -317,6 +329,19 @@ fun DishCard(
                     }
                 }
 
+                Button(
+                    onClick = {
+                        if (quantity > 0) {
+                            val updatedDish = dish.copy(cuisineId = cuisineId)
+                            onAddToCart(updatedDish, quantity)
+                            quantity = 0 // Reset quantity after adding
+                        }
+                    },
+                    enabled = quantity > 0,
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text("Add to Cart")
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.cravory.network
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import com.example.cravory.model.CartItem
 import com.example.cravory.model.Dish
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -115,6 +116,37 @@ object ApiClient {
         }
     }
 
+//    private fun parseDishesResponse(response: String, cuisineId: String? = null): List<Dish> {
+//        val json = JSONObject(response)
+//        if (json.getInt("response_code") != 200) {
+//            throw Exception(json.getString("response_message"))
+//        }
+//
+//        val cuisines = json.getJSONArray("cuisines")
+//        val dishes = mutableListOf<Dish>()
+//
+//        for (i in 0 until cuisines.length()) {
+//            val cuisine = cuisines.getJSONObject(i)
+//            // Only process the cuisine if cuisineId matches or is null
+//            if (cuisineId == null || cuisine.getString("cuisine_id") == cuisineId) {
+//                val items = cuisine.getJSONArray("items")
+//                for (j in 0 until items.length()) {
+//                    val item = items.getJSONObject(j)
+//                    dishes.add(
+//                        Dish(
+//                            id = item.getString("id"),
+//                            name = item.getString("name"),
+//                            image_url = item.getString("image_url"),
+//                            price = item.optString("price", "0"),
+//                            rating = item.optString("rating", "0.0")
+//                        )
+//                    )
+//                }
+//            }
+//        }
+//        return dishes
+//    }
+
     private fun parseDishesResponse(response: String, cuisineId: String? = null): List<Dish> {
         val json = JSONObject(response)
         if (json.getInt("response_code") != 200) {
@@ -126,8 +158,8 @@ object ApiClient {
 
         for (i in 0 until cuisines.length()) {
             val cuisine = cuisines.getJSONObject(i)
-            // Only process the cuisine if cuisineId matches or is null
-            if (cuisineId == null || cuisine.getString("cuisine_id") == cuisineId) {
+            val currentCuisineId = cuisine.getString("cuisine_id")
+            if (cuisineId == null || currentCuisineId == cuisineId) {
                 val items = cuisine.getJSONArray("items")
                 for (j in 0 until items.length()) {
                     val item = items.getJSONObject(j)
@@ -137,13 +169,97 @@ object ApiClient {
                             name = item.getString("name"),
                             image_url = item.getString("image_url"),
                             price = item.optString("price", "0"),
-                            rating = item.optString("rating", "0.0")
+                            rating = item.optString("rating", "0.0"),
+                            cuisineId = currentCuisineId
                         )
                     )
                 }
             }
         }
         return dishes
+    }
+
+    // New function for get_item_by_id
+//    suspend fun getItemById(itemId: String): Dish? = withContext(Dispatchers.IO) {
+//        val body = JSONObject().apply {
+//            put("item_id", itemId)
+//        }.toString()
+//        try {
+//            val response = makePostRequest("/emulator/interview/get_item_by_id", "get_item_by_id", body)
+//            val json = JSONObject(response)
+//            if (json.getInt("response_code") == 200) {
+//                Dish(
+//                    id = json.getString("item_id"),
+//                    name = json.getString("item_name"),
+//                    image_url = json.getString("item_image_url"),
+//                    price = json.optString("item_price", "0"),
+//                    rating = json.optString("item_rating", "0.0")
+//                )
+//            } else {
+//                null
+//            }
+//        } catch (e: Exception) {
+//            Log.e("ApiClient", "getItemById failed: ${e.message}", e)
+//            null
+//        }
+//    }
+
+    suspend fun getItemById(itemId: String): Dish? = withContext(Dispatchers.IO) {
+        val body = JSONObject().apply {
+            put("item_id", itemId)
+        }.toString()
+        try {
+            val response = makePostRequest("/emulator/interview/get_item_by_id", "get_item_by_id", body)
+            val json = JSONObject(response)
+            if (json.getInt("response_code") == 200) {
+                Dish(
+                    id = json.getString("item_id"),
+                    name = json.getString("item_name"),
+                    image_url = json.getString("item_image_url"),
+                    price = json.optString("item_price", "0"),
+                    rating = json.optString("item_rating", "0.0"),
+                    cuisineId = json.getString("cuisine_id")
+                )
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiClient", "getItemById failed: ${e.message}", e)
+            null
+        }
+    }
+
+    // New function for make_payment
+    suspend fun makePayment(items: List<CartItem>): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        val totalAmount = items.sumOf { it.itemPrice * it.itemQuantity }
+        val totalItems = items.sumOf { it.itemQuantity }
+        val body = JSONObject().apply {
+            put("total_amount", totalAmount.toString())
+            put("total_items", totalItems)
+            put("data", JSONArray().apply {
+                items.forEach { item ->
+                    put(JSONObject().apply {
+                        put("cuisine_id", item.cuisineId)
+                        put("item_id", item.itemId)
+                        put("item_price", item.itemPrice)
+                        put("itempls", item.itemQuantity)
+                    })
+                }
+            })
+        }.toString()
+
+        try {
+            val response = makePostRequest("/emulator/interview/make_payment", "make_payment", body)
+            val json = JSONObject(response)
+            if (json.getInt("response_code") == 200) {
+                Pair(true, "Order placed: ${json.getString("txn_ref_no")}")
+            } else {
+                Pair(false, json.getString("response_message"))
+            }
+        } catch (e: Exception) {
+            Log.e("ApiClient", "makePayment failed: ${e.message}", e)
+            Pair(false, "Error: ${e.message}")
+        }
     }
 
 }
