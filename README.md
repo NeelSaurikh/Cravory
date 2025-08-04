@@ -23,12 +23,12 @@ Cravory is a modern Android food ordering app that allows users to explore cuisi
 
 <table>
   <tr>
-    <td><img src="app/Images/SplashScreen.jpg" alt="Splash Screen" width="250"/></td>
-    <td><img src="app/Images/Landing%20Activity.jpg" alt="Landing Screen" width="250"/></td>
+    <td><img src="app/Readme/SplashScreen.jpg" alt="Splash Screen" width="250"/></td>
+    <td><img src="app/Readme/Landing%20Activity.jpg" alt="Landing Screen" width="250"/></td>
   </tr>
   <tr>
-    <td><img src="app/Images/Extended%20Menu.jpg" alt="Cuisine Screen" width="250"/></td>
-    <td><img src="app/Images/Cart.jpg" alt="Cart Screen" width="250"/></td>
+    <td><img src="app/Readme/Extended%20Menu.jpg" alt="Cuisine Screen" width="250"/></td>
+    <td><img src="app/Readme/Cart.jpg" alt="Cart Screen" width="250"/></td>
   </tr>
 </table>
 
