@@ -38,20 +38,21 @@ Cravory is a modern Android food ordering app that allows users to explore cuisi
 
 ## 🎥 Demo
 
-> 🎬 Click below to watch a screen recording of the app in action:
+> 🎬 Here's a live screen recording of the app in action:
 
-📽️ [Watch Example Recording](app/Images/Example%20Recording.mp4)
+![Demo GIF](app/Readme/Example%20Recording.gif)
 
+---
 
 ## 🛠️ Tech Stack
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
-- **Architecture**: MVVM
-- **Networking**: HttpURLConnection
-- **State Management**: LiveData, ViewModel
-- **Image Handling**: Bitmap from URL
-- **Design**: Material 3 Components
+- **Language**: Kotlin  
+- **UI Framework**: Jetpack Compose  
+- **Architecture**: MVVM  
+- **Networking**: HttpURLConnection  
+- **State Management**: LiveData, ViewModel  
+- **Image Handling**: Bitmap from URL  
+- **Design**: Material 3 Components  
 
 ---
 
@@ -59,10 +60,10 @@ Cravory is a modern Android food ordering app that allows users to explore cuisi
 
 The app communicates with OneBanc’s UAT APIs:
 
-- `get_item_list` – Fetch all available dishes
-- `get_item_by_filter` – Filter dishes by cuisine
-- `get_item_by_id` – Get detailed dish info
-- `make_payment` – Submit cart for order(WIP)
+- `get_item_list` – Fetch all available dishes  
+- `get_item_by_filter` – Filter dishes by cuisine  
+- `get_item_by_id` – Get detailed dish info  
+- `make_payment` – Submit cart for order (WIP)  
 
 ---
 
