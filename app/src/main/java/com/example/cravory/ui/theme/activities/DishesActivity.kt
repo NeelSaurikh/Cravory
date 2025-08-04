@@ -252,6 +252,7 @@ fun DishCard(
 ) {
     var quantity by remember { mutableStateOf(0) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var wasAddedToCart by remember { mutableStateOf(false) }
 
     LaunchedEffect(dish.image_url) {
         bitmap = ApiClient.loadImage(dish.image_url)
@@ -330,7 +331,12 @@ fun DishCard(
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 IconButton(
-                    onClick = { if (quantity > 0) quantity-- },
+                    onClick = {
+                        if (quantity > 0) {
+                            quantity--
+                            wasAddedToCart = false // reset state
+                        }
+                    },
                     modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
@@ -347,7 +353,10 @@ fun DishCard(
                 )
 
                 IconButton(
-                    onClick = { quantity++ },
+                    onClick = {
+                        quantity++
+                        wasAddedToCart = false // reset state
+                    },
                     modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
@@ -360,13 +369,13 @@ fun DishCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Add to Cart Button - in Column
+            // Add to Cart Button
             Button(
                 onClick = {
                     if (quantity > 0) {
                         val updatedDish = dish.copy(cuisineId = cuisineId)
                         onAddToCart(updatedDish, quantity)
-                        quantity = 0
+                        wasAddedToCart = true
                     }
                 },
                 enabled = quantity > 0,
@@ -375,7 +384,7 @@ fun DishCard(
                     .align(Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Add to Cart")
+                Text(if (wasAddedToCart) "Added to Cart" else "Add to Cart")
             }
         }
     }
